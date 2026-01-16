@@ -1,4 +1,5 @@
 #include "../include/Writer.hpp"
+#include "../include/WordGenerator.hpp"
 
 Writer::Writer() {
 // Создаем или открываем shared memory
@@ -42,11 +43,10 @@ Writer::~Writer() {
     close(shm_fd);
 }
 
-bool Writer::sendMessage(const char* message) {
+bool Writer::sendMessage(const char* message, const int& size) {
     // Проверяем, есть ли место в очереди
     if (queue->message_count >= MAX_MESSAGES) {
-        std::cout << "Очередь переполнена, сообщение отброшено: " 
-                    << message << std::endl;
+        std::cout << "Очередь переполнена, сообщение отброшено" << std::endl;
         return false;
     }
     
@@ -54,28 +54,38 @@ bool Writer::sendMessage(const char* message) {
     strncpy(queue->buffer[queue->write_index], message, MESSAGE_SIZE - 1);
     queue->buffer[queue->write_index][MESSAGE_SIZE - 1] = '\0';
     
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+    // Добавляем время отправки
+    queue->time_send[queue->write_index] = now;
+
+    queue->size[queue->write_index] = size;
+
     // Обновляем индексы
     queue->write_index = (queue->write_index + 1) % MAX_MESSAGES;
-    
+
     // Атомарно увеличиваем счетчик
     __sync_fetch_and_add(&queue->message_count, 1);
-    
-    std::cout << "Отправлено: " << message 
+    // std::cout << "Сообщение: " << message << std::endl;
+    std::cout << "Отправлено " << size << " bytes"
                 << " (в очереди: " << queue->message_count << ")" << std::endl;
     return true;
 }
 
 void Writer::run() {
-    int message_num = 1;
+    size_t message_num = 0;
+    int length_messages[3] = {128, 1024, 8192};
     while (!queue->shutdown_requested) {
         // Генерируем сообщение
-        char message[256];
-        snprintf(message, sizeof(message), 
-                "Сообщение #%d от писателя", message_num++);
+        std::string str = generateFixedLengthMessage(length_messages[message_num]);
+
+        char* message = new char[MESSAGE_SIZE];  // +1 для нуль-терминатора
+        strcpy(message, str.c_str());
         
         // Отправляем
-        sendMessage(message);
+        sendMessage(message, length_messages[message_num]);
         
+        message_num = (message_num + 1) % 3;
+
         // Имитируем работу
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }

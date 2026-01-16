@@ -7,8 +7,8 @@ all: reader writer
 reader: example_reader.cpp ../src/reader.cpp build/
 	$(CXX) $(CXXFLAGS) example_reader.cpp  ../src/reader.cpp -o build/reader $(LDFLAGS)
 
-writer: example_writer.cpp ../src/writer.cpp build/
-	$(CXX) $(CXXFLAGS) example_writer.cpp  ../src/writer.cpp -o build/writer $(LDFLAGS)
+writer: example_writer.cpp ../src/writer.cpp ../src/WordGenerator.cpp build/
+	$(CXX) $(CXXFLAGS) example_writer.cpp  ../src/writer.cpp ../src/WordGenerator.cpp -o build/writer $(LDFLAGS)
 
 clean:
 	rm -f build/writer build/reader

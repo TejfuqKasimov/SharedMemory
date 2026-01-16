@@ -29,37 +29,47 @@ bool Reader::hasMessages() {
     return queue->message_count > 0;
 }
 
-std::string Reader::getMessage() {
+OneMessage Reader::getMessage() {
+    OneMessage res;
     if (queue->message_count <= 0) {
-        return "";
+        return res;
     }
     
     // Копируем сообщение
     char message[MESSAGE_SIZE];
     strncpy(message, queue->buffer[queue->read_index], MESSAGE_SIZE);
-    
+    res.message = std::string(message);
+    res.time_recieved = queue->time_send[queue->read_index];
+    res.size = queue->size[queue->read_index];
     // Обновляем индексы
     queue->read_index = (queue->read_index + 1) % MAX_MESSAGES;
     
     // Атомарно уменьшаем счетчик
     __sync_fetch_and_sub(&queue->message_count, 1);
     
-    return std::string(message);
+    return res;
 }
 
-void Reader::processMessage(const std::string& message) {
+void Reader::processMessage(const std::string& message, 
+                            const std::chrono::steady_clock::time_point& receiveTime,
+                            const int& size) {
     // Имитация обработки
-    std::cout << "Читатель обрабатывает: " << message << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    std::cout << "Обработка завершена: " << message << std::endl;
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+
+    std::chrono::milliseconds duration = 
+        std::chrono::duration_cast<std::chrono::milliseconds>(now - receiveTime);
+    
+    std::cout << "Читатель получил сообщение " << size << " bytes" << std::endl;
+    std::cout << "Прошло " << duration.count() << " милиcекунд" << std::endl;
+    // std::cout << "Сообщение " << message << std::endl;
 }
 
 void Reader::run() {
     while (!queue->shutdown_requested) {
         if (hasMessages()) {
-            std::string message = getMessage();
-            if (!message.empty()) {
-                processMessage(message);
+            OneMessage message = getMessage();
+            if (!message.message.empty()) {
+                processMessage(message.message, message.time_recieved, message.size);
             }
         } else {
             // Нет сообщений - небольшая пауза

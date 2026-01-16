@@ -8,20 +8,28 @@
 #include <cstring>
 #include <chrono>
 #include <thread>
+#include <chrono>
 
 #define SHM_NAME "/my_shared_queue"
-#define SHM_SIZE (100 * 1024)  // 100KB
-#define MAX_MESSAGES 100
-#define MESSAGE_SIZE 256
+#define SHM_SIZE (100 * 2048)  // 200KB
+#define MAX_MESSAGES 5
+#define MESSAGE_SIZE 8200
 
 struct SharedQueue {
+    char buffer[MAX_MESSAGES][MESSAGE_SIZE];
+    std::chrono::steady_clock::time_point time_send[MAX_MESSAGES];
+    int size[MAX_MESSAGES];
     int write_index;
     int read_index;
     int message_count;
     bool shutdown_requested;
-    char buffer[MAX_MESSAGES][MESSAGE_SIZE];
 };
 
+struct OneMessage {
+    int size;
+    std::string message;
+    std::chrono::steady_clock::time_point time_recieved;
+};
 
 class Reader {
 private:
@@ -35,9 +43,10 @@ public:
     
     bool hasMessages();
     
-    std::string getMessage();
-    
-    void processMessage(const std::string& message);
+    OneMessage getMessage();
+    void processMessage(const std::string&, 
+                        const std::chrono::steady_clock::time_point&,
+                        const int&);
     
     void run();
 };
