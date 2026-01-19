@@ -65,29 +65,29 @@ bool Writer::sendMessage(const char* message, const int& size) {
 
     // Атомарно увеличиваем счетчик
     __sync_fetch_and_add(&queue->message_count, 1);
-    // std::cout << "Сообщение: " << message << std::endl;
-    std::cout << "Отправлено " << size << " bytes"
-                << " (в очереди: " << queue->message_count << ")" << std::endl;
+
     return true;
 }
 
 void Writer::run() {
     size_t message_num = 0;
     int length_messages[3] = {128, 1024, 8192};
-    while (!queue->shutdown_requested) {
+    while (queue->message_count <= MAX_MESSAGES) {
         // Генерируем сообщение
-        std::string str = generateFixedLengthMessage(length_messages[message_num]);
+        std::string str = generateFixedLengthMessage(8192);
 
         char* message = new char[MESSAGE_SIZE];  // +1 для нуль-терминатора
         strcpy(message, str.c_str());
         
         // Отправляем
-        sendMessage(message, length_messages[message_num]);
+        sendMessage(message, 8192);
         
-        message_num = (message_num + 1) % 3;
-
+        message_num = message_num + 1;
+        if (message_num % 1000 == 0) {
+            std::cout << message_num << std::endl;
+        }
         // Имитируем работу
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
 

@@ -50,17 +50,24 @@ OneMessage Reader::getMessage() {
     return res;
 }
 
+bool Reader::isShutdownRequested() {
+    return !(queue->shutdown_requested);
+}
+
 void Reader::processMessage(const std::string& message, 
                             const std::chrono::steady_clock::time_point& receiveTime,
                             const int& size) {
     // Имитация обработки
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 
-    std::chrono::milliseconds duration = 
+    std::chrono::milliseconds duration_milli = 
         std::chrono::duration_cast<std::chrono::milliseconds>(now - receiveTime);
+    std::chrono::nanoseconds duration_nano = 
+        std::chrono::duration_cast<std::chrono::nanoseconds>(now - receiveTime);
     
     std::cout << "Читатель получил сообщение " << size << " bytes" << std::endl;
-    std::cout << "Прошло " << duration.count() << " милиcекунд" << std::endl;
+    std::cout << "Прошло " << duration_milli.count() << " милиcекунд" << std::endl;
+    std::cout << "Или " << duration_nano.count() << " наносекунд" << std::endl;
     // std::cout << "Сообщение " << message << std::endl;
 }
 
@@ -73,7 +80,7 @@ void Reader::run() {
             }
         } else {
             // Нет сообщений - небольшая пауза
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            // std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     }
 }
