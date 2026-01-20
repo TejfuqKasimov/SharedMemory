@@ -11,9 +11,9 @@
 #include <chrono>
 
 #define SHM_NAME "/my_shared_queue"
-#define SHM_SIZE (100 * 2048)  // 200KB
-#define MAX_MESSAGES 20
-#define MESSAGE_SIZE 8200
+#define SHM_SIZE (100 * 327760)
+#define MAX_MESSAGES 100
+#define MESSAGE_SIZE 65536
 
 struct SharedQueue {
     char buffer[MAX_MESSAGES][MESSAGE_SIZE];

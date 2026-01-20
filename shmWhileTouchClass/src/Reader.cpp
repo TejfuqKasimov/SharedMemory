@@ -21,6 +21,7 @@ Reader::Reader() {
 }
     
 Reader::~Reader() {
+    shm_unlink(SHM_NAME);
     munmap(queue, SHM_SIZE);
     close(shm_fd);
 }

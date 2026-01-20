@@ -39,6 +39,7 @@ Writer::Writer() {
 }
 
 Writer::~Writer() {
+    shm_unlink(SHM_NAME);
     munmap(queue, SHM_SIZE);
     close(shm_fd);
 }
@@ -74,7 +75,7 @@ void Writer::run() {
     int length_messages[3] = {128, 1024, 8192};
     while (queue->message_count <= MAX_MESSAGES) {
         // Генерируем сообщение
-        std::string str = generateFixedLengthMessage(8192);
+        std::string str = generateFixedLengthMessage(MESSAGE_SIZE - 1);
 
         char* message = new char[MESSAGE_SIZE];  // +1 для нуль-терминатора
         strcpy(message, str.c_str());
