@@ -23,6 +23,9 @@ writer2: $(WRITER2_SRC)
 
 clean:
 	rm -f $(BUILD_DIR)/reader $(BUILD_DIR)/writer1 $(BUILD_DIR)/writer2
+	rm /dev/shm/reader_queue
+	rm /dev/shm/writer_queue1
+	rm /dev/shm/writer_queue2
 
 run_reader:
 	./build/reader
